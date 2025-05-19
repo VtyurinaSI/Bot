@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Json;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -12,6 +14,7 @@ namespace Bot
 {
     class UpdateHandler : IUpdateHandler
     {
+        record CatFactDto(string Fact, int Length);
         public delegate Task MessageHandler(string msg);
         public event MessageHandler? OnHandleUpdateStarted;
         public event MessageHandler? OnHandleUpdateCompleted;
@@ -29,10 +32,20 @@ namespace Bot
                 return;
             }
             OnHandleUpdateStarted?.Invoke(update.Message.Text);
-            var botText = "Сообщение получено!";
+            var botText = update.Message.Text == "/cat" ? await GetCatAsync(token) : "Сообщение получено!";
             await botClient.SendMessage(update.Message.Chat.Id, botText, cancellationToken: token);
-            OnHandleUpdateCompleted?.Invoke(update.Message.Text);
 
+            OnHandleUpdateCompleted?.Invoke(update.Message.Text);
         }
+        
+        private static async Task<string> GetCatAsync(CancellationToken token)
+        {
+            using var http = new HttpClient();
+            var dto = await http.GetFromJsonAsync<CatFactDto>("https://catfact.ninja/fact", token);
+
+            return dto is not null && !string.IsNullOrEmpty(dto.Fact)?             
+                 dto.Fact:"Ошибка в получении фактов о кошках T_T";
+        }
+
     }
 }
