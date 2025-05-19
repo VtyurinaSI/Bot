@@ -6,11 +6,15 @@ using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using static Telegram.Bot.TelegramBotClient;
 
 namespace Bot
 {
     class UpdateHandler : IUpdateHandler
     {
+        public delegate void MessageHandler(string msg);
+        public event MessageHandler? OnHandleUpdateStarted;
+        public event MessageHandler? OnHandleUpdateCompleted;
         public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
@@ -18,11 +22,16 @@ namespace Bot
 
         public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken token)
         {
-            var info = "Сообщение получено!";
-            Console.WriteLine(info);
-            botClient.SendMessage(update.Message?.Chat.Id, info, cancellationToken: token);
-
-           // Console.WriteLine("Сообщение получено!");
+            
+            if (update.Message?.From is null)
+            {
+                Console.WriteLine("Message is null");
+                return Task.CompletedTask;
+            }
+            OnHandleUpdateStarted?.Invoke(update.Message.Text);
+            var botText = "Сообщение получено!";
+            botClient.SendMessage(update.Message.Chat.Id, botText, cancellationToken: token);
+            OnHandleUpdateCompleted.Invoke(update.Message.Text);
             return Task.CompletedTask;
         }
     }
