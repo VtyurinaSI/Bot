@@ -12,27 +12,27 @@ namespace Bot
 {
     class UpdateHandler : IUpdateHandler
     {
-        public delegate void MessageHandler(string msg);
+        public delegate Task MessageHandler(string msg);
         public event MessageHandler? OnHandleUpdateStarted;
         public event MessageHandler? OnHandleUpdateCompleted;
-        public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
+        public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            await Task.Run(() => Console.WriteLine($"Ошибка: {exception.Message}"), cancellationToken);
         }
 
-        public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken token)
+        public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken token)
         {
-            
-            if (update.Message?.From is null)
+
+            if (update.Message is null)
             {
-                Console.WriteLine("Message is null");
-                return Task.CompletedTask;
+                await Task.Run(() => Console.WriteLine("Message is null"));
+                return;
             }
             OnHandleUpdateStarted?.Invoke(update.Message.Text);
             var botText = "Сообщение получено!";
-            botClient.SendMessage(update.Message.Chat.Id, botText, cancellationToken: token);
-            OnHandleUpdateCompleted.Invoke(update.Message.Text);
-            return Task.CompletedTask;
+            await botClient.SendMessage(update.Message.Chat.Id, botText, cancellationToken: token);
+            OnHandleUpdateCompleted?.Invoke(update.Message.Text);
+
         }
     }
 }

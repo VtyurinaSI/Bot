@@ -24,20 +24,27 @@ namespace Bot
                     DropPendingUpdates = true
                 };
 
-                handler.OnHandleUpdateStarted += Started;
-                handler.OnHandleUpdateCompleted += Completed;
+                handler.OnHandleUpdateStarted += StartHandling;
+                handler.OnHandleUpdateCompleted += CompletedHandling;
                 botClient.StartReceiving(handler.HandleUpdateAsync, handler.HandleErrorAsync, receiverOptions);
 
-                await Task.Delay(-1);
+
+                Console.WriteLine($"Нажмите клавишу A для выхода (в латинской раскладке)");
+                while (!cts.IsCancellationRequested)
+                {
+                    if (Console.ReadKey().KeyChar == 'A')
+                        await cts.CancelAsync();
+                    else Console.WriteLine($"\nИнформация о боте:\nID: {me.Id}\nUsername: @{me.Username}\nИмя: {me.FirstName} {me.LastName}");
+                }
             }
             finally
             {
-                handler.OnHandleUpdateStarted -= Started;
-                handler.OnHandleUpdateCompleted -= Completed;
-                await cts.CancelAsync();
+                handler.OnHandleUpdateStarted -= StartHandling;
+                handler.OnHandleUpdateCompleted -= CompletedHandling;
+                cts.Dispose();
             }
         }
-        private static void Started(string msg) => Console.WriteLine($"Началась обработка сообщения \"{msg}\"");
-        private static void Completed(string msg) => Console.WriteLine($"Закончилась обработка сообщения \"{msg}\"");
+        private static async Task StartHandling(string msg) => await Task.Run(() => Console.WriteLine($"Началась обработка сообщения \"{msg}\""));
+        private static async Task CompletedHandling(string msg) => await Task.Run(() => Console.WriteLine($"Закончилась обработка сообщения \"{msg}\""));
     }
 }
