@@ -36,12 +36,7 @@ namespace Bot
             var handler = new UpdateHandler();
             botClient.StartReceiving(handler, receiverOptions);
 
-            //botClient.StartReceiving(UpdateReceived, (_, exception, _) => Console.WriteLine(exception.Message),
-            //new ReceiverOptions()
-            //{
-            //    AllowedUpdates = [UpdateType.Message]
-            //}, cts.Token);
-            Console.ReadKey();
+            await Task.Delay(-1);
             await cts.CancelAsync();
         }
     }
